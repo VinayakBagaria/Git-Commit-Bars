@@ -27,8 +27,8 @@ func printData(values map[string]int) {
 	}
 }
 
-func normalize(x, xmin, xmax int) int {
-	return int(float32(x-xmin) / float32(xmax-xmin))
+func normalize(x, xMin, xMax int) int {
+	return int(float32(x - xMin) / float32(xMax - xMin))
 }
 
 func getScore(items map[string]Bars) map[string]int {
