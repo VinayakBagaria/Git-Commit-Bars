@@ -28,7 +28,6 @@ func printData(values map[string]int) {
 }
 
 func normalize(x, xmin, xmax int) int {
-	fmt.Println(x, xmin, xmax)
 	return int(float32(x-xmin) / float32(xmax-xmin))
 }
 
@@ -87,7 +86,7 @@ func filterAsPerPeriodicity(items []map[string]string, periodicity string) map[s
 	bars := make(map[string]Bars)
 
 	for i := 0; i < len(items); i++ {
-		timestamp := items[i]["timestamp"]
+		timestamp := items[i]["timestamp"][:10]
 		bar := Bars{Timestamp: timestamp, Commits: 0}
 		if _, found := bars[timestamp]; !found {
 			bar.Commits += 1
