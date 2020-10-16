@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -34,7 +35,6 @@ func getLog(after, before string) ([]map[string]string, error) {
 		m["author"] = c[1]
 		items = append(items, m)
 	}
-	fmt.Println(items)
 
 	return items, nil
 }
@@ -46,5 +46,12 @@ func main() {
 
 	flag.Parse()
 
-	getLog(*after, *before)
+	items, err := getLog(*after, *before)
+
+	if err != nil {
+		fmt.Println("Issue happened")
+		os.Exit(0)
+	}
+
+	fmt.Println(items)
 }
