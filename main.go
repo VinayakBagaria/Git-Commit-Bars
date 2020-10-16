@@ -10,17 +10,14 @@ import (
 
 func getLog(after, before string) ([]map[string]string, error) {
 	args := []string{"log", "--pretty=format:%ai|%ae"}
-
 	if after != "" {
 		args = append(args, "--after="+after)
 	}
-
 	if before != "" {
 		args = append(args, "--before="+before)
 	}
 
 	cmd := exec.Command("git", args...)
-
 	output, err := cmd.Output()
 
 	var items []map[string]string
@@ -35,7 +32,6 @@ func getLog(after, before string) ([]map[string]string, error) {
 		m["author"] = c[1]
 		items = append(items, m)
 	}
-
 	return items, nil
 }
 
