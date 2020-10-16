@@ -38,7 +38,6 @@ func getScore(items map[string]Bars) map[string]int {
 	}
 	xMax := intVals[0]
 	xMin := intVals[0]
-
 	for _, val := range intVals {
 		if xMax < val {
 			xMax = val
@@ -84,7 +83,6 @@ func getCommitLog(after, before string) ([]map[string]string, error) {
 
 func filterAsPerPeriodicity(items []map[string]string, periodicity string) map[string]Bars {
 	bars := make(map[string]Bars)
-
 	for i := 0; i < len(items); i++ {
 		timestamp := items[i]["timestamp"][:10]
 		bar := Bars{Timestamp: timestamp, Commits: 0}
@@ -93,7 +91,6 @@ func filterAsPerPeriodicity(items []map[string]string, periodicity string) map[s
 		}
 		bars[timestamp] = bar
 	}
-
 	return bars
 }
 
