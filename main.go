@@ -39,14 +39,18 @@ func main() {
 	//periodicity := flag.String("p", "month", "peridocity definition to day, week, month, year")
 	after := flag.String("a", "", "after date (yyyy-mm-dd hh:mm)")
 	before := flag.String("b", "", "before date (yyyy-mm-dd hh:mm)")
-
 	flag.Parse()
 
 	items, err := getLog(*after, *before)
-
 	if err != nil {
 		fmt.Println("Issue happened")
 		os.Exit(0)
+	}
+
+	if len(items) > 0 {
+		fmt.Printf("%d commits\n", len(items))
+	} else {
+		fmt.Println("No commits to plot")
 	}
 
 	fmt.Println(items)
