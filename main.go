@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func getLog(after, before string) ([]map[string]string, error) {
+func getCommitLog(after, before string) ([]map[string]string, error) {
 	args := []string{"log", "--pretty=format:%ai|%ae"}
 	if after != "" {
 		args = append(args, "--after="+after)
@@ -41,7 +41,7 @@ func main() {
 	before := flag.String("b", "", "before date (yyyy-mm-dd hh:mm)")
 	flag.Parse()
 
-	items, err := getLog(*after, *before)
+	items, err := getCommitLog(*after, *before)
 	if err != nil {
 		fmt.Println("Issue happened")
 		os.Exit(0)
