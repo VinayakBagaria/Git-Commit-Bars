@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"git-bars/collections"
 	"os"
 	"os/exec"
 	"strings"
@@ -28,7 +29,7 @@ func printData(values map[string]int) {
 }
 
 func normalize(x, xMin, xMax int) int {
-	return int(float32(x - xMin) / float32(xMax - xMin))
+	return int(float32(x-xMin) / float32(xMax-xMin))
 }
 
 func getScore(items map[string]Bars) map[string]int {
@@ -54,7 +55,7 @@ func getScore(items map[string]Bars) map[string]int {
 	return dateWiseLength
 }
 
-func getCommitLog(after, before string) ([]map[string]string, error) {
+func getCommitLog(after, before string, reverse string) ([]map[string]string, error) {
 	args := []string{"log", "--pretty=format:%ai|%ae"}
 	if after != "" {
 		args = append(args, "--after="+after)
@@ -78,38 +79,64 @@ func getCommitLog(after, before string) ([]map[string]string, error) {
 		m["author"] = c[1]
 		items = append(items, m)
 	}
+	if reverse != "" {
+		i := 0
+		j := len(items)
+		for i < j {
+			items[i], items[j] = items[j], items[i]
+			i += 1
+			j -= 1
+		}
+	}
 	return items, nil
 }
 
-func filterAsPerPeriodicity(items []map[string]string, periodicity string) map[string]Bars {
-	bars := make(map[string]Bars)
+func filterAsPerPeriodicity(items []map[string]string, periodicity string) *collections.OrderedDict {
+	bars := collections.New()
 	for i := 0; i < len(items); i++ {
 		timestamp := items[i]["timestamp"][:10]
-		bar := Bars{Timestamp: timestamp, Commits: 0}
-		if _, found := bars[timestamp]; !found {
-			bar.Commits += 1
+		value := bars.Get(timestamp)
+		if value != nil {
+			switch val := value.(type) {
+			case *Bars:
+				bars.Set(timestamp, Bars{Timestamp: val.Timestamp, Commits: 1})
+			}
+		} else {
+			bars.Set(timestamp, Bars{Timestamp: timestamp, Commits: 1})
 		}
-		bars[timestamp] = bar
+
+		//data := bars.Get(timestamp)
+		//if data != nil {
+		//	bars.Set(timestamp, Bars{Timestamp: timestamp, Commits: 1})
+		//} else {
+		//	//bars.Set(timestamp, Bars{Timestamp: timestamp, Commits: data.Commits + 1})
+		//}
+		//if data, found := bars[timestamp]; found {
+		//	bars[timestamp] = Bars{Timestamp: data.Timestamp, Commits: data.Commits + 1}
+		//} else {
+		//	bars[timestamp] = Bars{Timestamp: timestamp, Commits: 0}
+		//}
 	}
 	return bars
 }
 
 func main() {
-	periodicity := flag.String("p", "month", "peridocity definition to day, week, month, year")
+	periodicity := flag.String("p", "month", "periodicity definition to day, week, month, year")
 	after := flag.String("a", "", "after date (yyyy-mm-dd hh:mm)")
 	before := flag.String("b", "", "before date (yyyy-mm-dd hh:mm)")
+	reverse := flag.String("r", "", "reverse date order")
 	flag.Parse()
 
-	items, err := getCommitLog(*after, *before)
+	items, err := getCommitLog(*after, *before, *reverse)
 	if err != nil {
 		fmt.Println("Issue happened")
 		os.Exit(0)
 	}
 
 	if len(items) > 0 {
-		fmt.Printf("%d commits\n", len(items))
 		data := filterAsPerPeriodicity(items, *periodicity)
-		printData(getScore(data))
+		fmt.Printf("%d commits over %d days\n", len(items), data.Length())
+		//printData(getScore(data))
 	} else {
 		fmt.Println("No commits to plot")
 	}
