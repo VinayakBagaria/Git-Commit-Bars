@@ -32,10 +32,13 @@ func normalize(x, xMin, xMax int) int {
 	return int(float32(x-xMin) / float32(xMax-xMin))
 }
 
-func getScore(items map[string]Bars) map[string]int {
+func getScore(items *collections.OrderedDict) map[string]int {
 	intVals := []int{}
-	for _, value := range items {
-		intVals = append(intVals, value.Commits)
+	for _, item := range items.Lookup() {
+		switch val := item.Value().(type) {
+		case Bars:
+			intVals = append(intVals, val.Commits)
+		}
 	}
 	xMax := intVals[0]
 	xMin := intVals[0]
@@ -44,13 +47,16 @@ func getScore(items map[string]Bars) map[string]int {
 			xMax = val
 		}
 		if xMin > val {
-			xMax = val
+			xMin = val
 		}
 	}
 
 	dateWiseLength := make(map[string]int)
-	for key, value := range items {
-		dateWiseLength[key] = normalize(value.Commits, xMin, xMax)
+	for key, item := range items.Lookup() {
+		switch val := item.Value().(type) {
+		case Bars:
+			dateWiseLength[key] = normalize(val.Commits, xMin, xMax)
+		}
 	}
 	return dateWiseLength
 }
@@ -136,7 +142,7 @@ func main() {
 	if len(items) > 0 {
 		data := filterAsPerPeriodicity(items, *periodicity)
 		fmt.Printf("%d commits over %d days\n", len(items), data.Length())
-		//printData(getScore(data))
+		printData(getScore(data))
 	} else {
 		fmt.Println("No commits to plot")
 	}

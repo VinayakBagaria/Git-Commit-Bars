@@ -48,6 +48,10 @@ func (d *OrderedDict) Iterate() chan interface{} {
 	return ch
 }
 
+func (d *OrderedDict) Lookup() map[string]*LinkedListNode {
+	return d.lookup
+}
+
 func (d *OrderedDict) Length() int {
 	len := 0
 	for _ = range d.list.Iterate() {
