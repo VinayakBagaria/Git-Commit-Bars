@@ -21,7 +21,7 @@ type Logic struct {
 }
 
 var block = "\u2580"
-var count = 30
+var count = 10
 
 func normalize(x, xMin, xMax int) int {
 	return int(float32(x-xMin) / float32(xMax-xMin))
