@@ -14,54 +14,42 @@ type Bars struct {
 	Commits   int
 }
 
-func printData(values map[string]int) {
-	for key, value := range values {
-		block := "\u2580"
-		n := 0
-		fmt.Print(key)
-		fmt.Print(" ")
-		for n <= value {
-			n += 1
-			fmt.Print(block)
-		}
-		fmt.Println()
-	}
+type Logic struct {
+	bars *collections.OrderedDict
+	min  int
+	max  int
 }
+
+var block = "\u2580"
+var count = 30
 
 func normalize(x, xMin, xMax int) int {
 	return int(float32(x-xMin) / float32(xMax-xMin))
 }
 
-func getScore(items *collections.OrderedDict) map[string]int {
-	intVals := []int{}
-	for _, item := range items.Lookup() {
+func getScore(items Logic) {
+	for key, item := range items.bars.Lookup() {
 		switch val := item.Value().(type) {
 		case Bars:
-			intVals = append(intVals, val.Commits)
+			{
+				value := normalize(val.Commits, items.min, items.max)
+				fmt.Print(key)
+				n := 0
+				fmt.Print(" ")
+				fmt.Print(val.Commits)
+				fmt.Print("    ")
+				for n <= value {
+					n += 1
+					fmt.Print(strings.Repeat(block, count))
+				}
+				fmt.Println()
+			}
 		}
-	}
-	xMax := intVals[0]
-	xMin := intVals[0]
-	for _, val := range intVals {
-		if xMax < val {
-			xMax = val
-		}
-		if xMin > val {
-			xMin = val
-		}
-	}
 
-	dateWiseLength := make(map[string]int)
-	for key, item := range items.Lookup() {
-		switch val := item.Value().(type) {
-		case Bars:
-			dateWiseLength[key] = normalize(val.Commits, xMin, xMax)
-		}
 	}
-	return dateWiseLength
 }
 
-func getCommitLog(after, before string, reverse string) ([]map[string]string, error) {
+func getCommitLog(after, before string, reverse string) (Logic, error) {
 	args := []string{"log", "--pretty=format:%ai|%ae"}
 	if after != "" {
 		args = append(args, "--after="+after)
@@ -72,78 +60,56 @@ func getCommitLog(after, before string, reverse string) ([]map[string]string, er
 
 	cmd := exec.Command("git", args...)
 	output, err := cmd.Output()
-
-	var items []map[string]string
 	if err != nil {
-		return items, err
+		return Logic{}, err
 	}
-	res := strings.Split(string(output), "\n")
-	for _, val := range res {
-		c := strings.Split(val, "|")
-		m := make(map[string]string)
-		m["timestamp"] = c[0]
-		m["author"] = c[1]
-		items = append(items, m)
-	}
-	if reverse != "" {
-		i := 0
-		j := len(items)
-		for i < j {
-			items[i], items[j] = items[j], items[i]
-			i += 1
-			j -= 1
-		}
-	}
-	return items, nil
-}
 
-func filterAsPerPeriodicity(items []map[string]string, periodicity string) *collections.OrderedDict {
 	bars := collections.New()
-	for i := 0; i < len(items); i++ {
-		timestamp := items[i]["timestamp"][:10]
-		value := bars.Get(timestamp)
+	logicStruct := Logic{bars: bars}
+	res := strings.Split(string(output), "\n")
+	if len(res) == 0 {
+		fmt.Println("No commits to plot")
+		return logicStruct, nil
+	}
+	min := 0
+	max := 0
+	for _, val := range res {
+		c := strings.Split(val, "|")[0][:10]
+		value := bars.Get(c)
+		commitsForTs := 0
 		if value != nil {
 			switch val := value.(type) {
-			case *Bars:
-				bars.Set(timestamp, Bars{Timestamp: val.Timestamp, Commits: 1})
+			case Bars:
+				commitsForTs = val.Commits + 1
 			}
 		} else {
-			bars.Set(timestamp, Bars{Timestamp: timestamp, Commits: 1})
+			commitsForTs = 1
 		}
-
-		//data := bars.Get(timestamp)
-		//if data != nil {
-		//	bars.Set(timestamp, Bars{Timestamp: timestamp, Commits: 1})
-		//} else {
-		//	//bars.Set(timestamp, Bars{Timestamp: timestamp, Commits: data.Commits + 1})
-		//}
-		//if data, found := bars[timestamp]; found {
-		//	bars[timestamp] = Bars{Timestamp: data.Timestamp, Commits: data.Commits + 1}
-		//} else {
-		//	bars[timestamp] = Bars{Timestamp: timestamp, Commits: 0}
-		//}
+		bars.Set(c, Bars{Commits: commitsForTs})
+		if commitsForTs < min {
+			min = commitsForTs
+		}
+		if max < commitsForTs {
+			max = commitsForTs
+		}
 	}
-	return bars
+	logicStruct = Logic{bars: bars, min: min, max: max}
+	return logicStruct, nil
 }
 
 func main() {
-	periodicity := flag.String("p", "month", "periodicity definition to day, week, month, year")
 	after := flag.String("a", "", "after date (yyyy-mm-dd hh:mm)")
 	before := flag.String("b", "", "before date (yyyy-mm-dd hh:mm)")
 	reverse := flag.String("r", "", "reverse date order")
 	flag.Parse()
 
-	items, err := getCommitLog(*after, *before, *reverse)
+	logicStruct, err := getCommitLog(*after, *before, *reverse)
 	if err != nil {
 		fmt.Println("Issue happened")
 		os.Exit(0)
 	}
-
-	if len(items) > 0 {
-		data := filterAsPerPeriodicity(items, *periodicity)
-		fmt.Printf("%d commits over %d days\n", len(items), data.Length())
-		printData(getScore(data))
-	} else {
+	if logicStruct.bars.Length() == 0 {
 		fmt.Println("No commits to plot")
 	}
+	getScore(logicStruct)
 }
