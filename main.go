@@ -35,7 +35,7 @@ func getScore(items Logic) {
 		case Bars:
 			{
 				value := int(normalize(val.Commits, items.min, items.max) * float32(count))
-				fmt.Print(val.Timestamp)
+			fmt.Print(val.Timestamp)
 				n := 0
 				fmt.Print(" ")
 				commits := val.Commits
