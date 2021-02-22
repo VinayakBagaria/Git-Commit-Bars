@@ -17,35 +17,67 @@ type Bars struct {
 
 type Logic struct {
 	bars *collections.OrderedDict
-	min  int
-	max  int
 }
 
 var block = "\u2580"
-var count = 4
+var count = 10
 
 func normalize(x, xMin, xMax int) float32 {
 	return float32(x-xMin) / float32(xMax-xMin)
 }
 
+func numberOfDigits(n int) int {
+	count := 0
+	for n != 0 {
+		count += 1
+		n /= 10
+	}
+	return count
+}
+
+func getMaxMin(bars *collections.OrderedDict) (int, int) {
+	min := 1
+	max := 1
+	index := 0
+	for _, v := range bars.Lookup() {
+		switch val := v.Value().(type) {
+		case Bars:
+			{
+				commitCount := val.Commits
+				if index == 0 {
+					min = commitCount
+					max = commitCount
+				}
+				if commitCount < min {
+					min = commitCount
+				}
+				if commitCount > max {
+					max = commitCount
+				}
+			}
+		}
+		index += 1
+	}
+	return min, max
+}
+
 func getScore(items Logic) {
-	maxDigits := (items.max / 10) + 1
+	min, max := getMaxMin(items.bars)
+	maxDigits := numberOfDigits(max)
 	for value := range items.bars.Iterate() {
 		switch val := value.(type) {
 		case Bars:
 			{
-				value := int(normalize(val.Commits, items.min, items.max) * float32(count))
+				value := int(normalize(val.Commits, min, max) * float32(count))
 				fmt.Print(val.Timestamp)
-				n := 0
 				fmt.Print(" ")
 				commits := val.Commits
 				fmt.Print(commits)
-				spaces := maxDigits - ((commits / 10) + 1) + 2
+				spaces := maxDigits - numberOfDigits(commits) + 2
 				for i := 0; i < spaces; i += 1 {
 					fmt.Print(" ")
 				}
-				for n <= value {
-					n += 1
+				for n := 0; n <= value; n += 1 {
 					fmt.Print(strings.Repeat(block, count))
 				}
 				fmt.Println()
@@ -74,11 +106,8 @@ func getCommitLog(after, before string, author string) (Logic, error) {
 	logicStruct := Logic{bars: bars}
 	res := strings.Split(string(output), "\n")
 	if len(res) == 0 {
-		fmt.Println("No commits to plot")
 		return logicStruct, nil
 	}
-	min := 0
-	max := 0
 	for _, val := range res {
 		splitted := strings.Split(val, "|")
 		authorName := splitted[1]
@@ -97,14 +126,8 @@ func getCommitLog(after, before string, author string) (Logic, error) {
 			commitsForTs = 1
 		}
 		bars.Set(c, Bars{Timestamp: c, Commits: commitsForTs, Author: authorName})
-		if commitsForTs < min {
-			min = commitsForTs
-		}
-		if max < commitsForTs {
-			max = commitsForTs
-		}
 	}
-	logicStruct = Logic{bars: bars, min: min, max: max}
+	logicStruct = Logic{bars: bars}
 	return logicStruct, nil
 }
 
