@@ -10,6 +10,7 @@ import (
 )
 
 type Bars struct {
+	Timestamp string
 	Commits   int
 }
 
@@ -27,12 +28,12 @@ func normalize(x, xMin, xMax int) int {
 }
 
 func getScore(items Logic) {
-	for key, item := range items.bars.Lookup() {
-		switch val := item.Value().(type) {
+	for value := range items.bars.Iterate() {
+		switch val := value.(type) {
 		case Bars:
 			{
 				value := normalize(val.Commits, items.min, items.max)
-				fmt.Print(key)
+				fmt.Print(val.Timestamp)
 				n := 0
 				fmt.Print(" ")
 				fmt.Print(val.Commits)
@@ -84,7 +85,7 @@ func getCommitLog(after, before string, reverse string) (Logic, error) {
 		} else {
 			commitsForTs = 1
 		}
-		bars.Set(c, Bars{Commits: commitsForTs})
+		bars.Set(c, Bars{Timestamp: c, Commits: commitsForTs})
 		if commitsForTs < min {
 			min = commitsForTs
 		}
