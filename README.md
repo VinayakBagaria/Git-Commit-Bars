@@ -8,13 +8,27 @@ Just Go.
 
 ## Installation
 
-```sh
+Go to an active git directory.
+
+```
 go run main.go
 ```
 
 With a build procedure...
 
-```sh
+```
 go build main.go
 ./main
+```
+
+You can also filter via author. Any valid substring of the author's name work.
+
+```
+go run main.go -u vinayak
+```
+
+OR
+
+```
+go run main.go --author vinayak
 ```
