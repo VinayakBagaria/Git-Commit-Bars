@@ -12,6 +12,7 @@ import (
 type Bars struct {
 	Timestamp string
 	Commits   int
+	Author string
 }
 
 type Logic struct {
@@ -49,7 +50,7 @@ func getScore(items Logic) {
 	}
 }
 
-func getCommitLog(after, before string, reverse string) (Logic, error) {
+func getCommitLog(after, before string, author string) (Logic, error) {
 	args := []string{"log", "--pretty=format:%ai|%ae"}
 	if after != "" {
 		args = append(args, "--after="+after)
@@ -74,7 +75,12 @@ func getCommitLog(after, before string, reverse string) (Logic, error) {
 	min := 0
 	max := 0
 	for _, val := range res {
-		c := strings.Split(val, "|")[0][:10]
+		splitted := strings.Split(val, "|")
+		authorName := splitted[1]
+		if !strings.Contains(authorName, author) {
+			continue
+		}
+		c := splitted[0][:10]
 		value := bars.Get(c)
 		commitsForTs := 0
 		if value != nil {
@@ -85,7 +91,7 @@ func getCommitLog(after, before string, reverse string) (Logic, error) {
 		} else {
 			commitsForTs = 1
 		}
-		bars.Set(c, Bars{Timestamp: c, Commits: commitsForTs})
+		bars.Set(c, Bars{Timestamp: c, Commits: commitsForTs, Author: authorName})
 		if commitsForTs < min {
 			min = commitsForTs
 		}
@@ -100,10 +106,10 @@ func getCommitLog(after, before string, reverse string) (Logic, error) {
 func main() {
 	after := flag.String("a", "", "after date (yyyy-mm-dd hh:mm)")
 	before := flag.String("b", "", "before date (yyyy-mm-dd hh:mm)")
-	reverse := flag.String("r", "", "reverse date order")
+	author := flag.String("u", "", "author order")
 	flag.Parse()
 
-	logicStruct, err := getCommitLog(*after, *before, *reverse)
+	logicStruct, err := getCommitLog(*after, *before, *author)
 	if err != nil {
 		fmt.Println("Issue happened")
 		os.Exit(0)
