@@ -29,6 +29,7 @@ func normalize(x, xMin, xMax int) float32 {
 }
 
 func getScore(items Logic) {
+	maxDigits := (items.max / 10) + 1
 	for value := range items.bars.Iterate() {
 		switch val := value.(type) {
 		case Bars:
@@ -37,8 +38,12 @@ func getScore(items Logic) {
 				fmt.Print(val.Timestamp)
 				n := 0
 				fmt.Print(" ")
-				fmt.Print(val.Commits)
-				fmt.Print("    ")
+				commits := val.Commits
+				fmt.Print(commits)
+				spaces := maxDigits - ((commits / 10) + 1) + 2
+				for i := 0; i < spaces; i += 1 {
+					fmt.Print(" ")
+				}
 				for n <= value {
 					n += 1
 					fmt.Print(strings.Repeat(block, count))
