@@ -20,10 +20,10 @@ type Logic struct {
 }
 
 var block = "\u2580"
-var count = 10
+var count = 30.0
 
-func normalize(x, xMin, xMax int) float32 {
-	return float32(x-xMin) / float32(xMax-xMin)
+func normalize(x, xMin, xMax int) float64 {
+	return float64(x-xMin) / float64(xMax-xMin)
 }
 
 func numberOfDigits(n int) int {
@@ -36,8 +36,7 @@ func numberOfDigits(n int) int {
 }
 
 func getMaxMin(bars *collections.OrderedDict) (int, int) {
-	min := 1
-	max := 1
+	max := -1
 	index := 0
 	for _, v := range bars.Lookup() {
 		switch val := v.Value().(type) {
@@ -45,11 +44,7 @@ func getMaxMin(bars *collections.OrderedDict) (int, int) {
 			{
 				commitCount := val.Commits
 				if index == 0 {
-					min = commitCount
 					max = commitCount
-				}
-				if commitCount < min {
-					min = commitCount
 				}
 				if commitCount > max {
 					max = commitCount
@@ -58,32 +53,30 @@ func getMaxMin(bars *collections.OrderedDict) (int, int) {
 		}
 		index += 1
 	}
-	return min, max
+	return 0, max
 }
 
 func getScore(items Logic) {
 	min, max := getMaxMin(items.bars)
+	if int(count) < max {
+		count = float64(max)
+	}
 	maxDigits := numberOfDigits(max)
 	for value := range items.bars.Iterate() {
 		switch val := value.(type) {
 		case Bars:
 			{
-				value := int(normalize(val.Commits, min, max) * float32(count))
 				fmt.Print(val.Timestamp)
 				fmt.Print(" ")
 				commits := val.Commits
+				value := normalize(commits, min, max)
 				fmt.Print(commits)
 				spaces := maxDigits - numberOfDigits(commits) + 2
-				for i := 0; i < spaces; i += 1 {
-					fmt.Print(" ")
-				}
-				for n := 0; n <= value; n += 1 {
-					fmt.Print(strings.Repeat(block, count))
-				}
+				fmt.Print(strings.Repeat(" ", spaces))
+				fmt.Print(strings.Repeat(block, int(value*count)))
 				fmt.Println()
 			}
 		}
-
 	}
 }
 
