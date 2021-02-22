@@ -132,11 +132,12 @@ func main() {
 
 	logicStruct, err := getCommitLog(*after, *before, *author)
 	if err != nil {
-		fmt.Println("Issue happened")
+		fmt.Println("Error: Do you have Git initialized in this directory?")
 		os.Exit(0)
 	}
 	if logicStruct.bars.Length() == 0 {
 		fmt.Println("No commits to plot")
+		os.Exit(0)
 	}
 	getScore(logicStruct)
 }
