@@ -6,6 +6,7 @@ import (
 	"git-bars/collections"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -127,6 +128,16 @@ func getCommitLog(after, before string, author string) (Logic, error) {
 	return logicStruct, nil
 }
 
+func getCommaSeparatedString(value int) string {
+	re := regexp.MustCompile("(\\d+)(\\d{3})")
+	str := fmt.Sprintf("%d", value)
+	for n := ""; n != str; {
+		n = str
+		str = re.ReplaceAllString(str, "$1,$2")
+	}
+	return str
+}
+
 func main() {
 	after := flag.String("a", "", "after date (yyyy-mm-dd hh:mm)")
 	before := flag.String("b", "", "before date (yyyy-mm-dd hh:mm)")
@@ -142,7 +153,8 @@ func main() {
 		fmt.Println("No commits to plot")
 		os.Exit(0)
 	}
-	fmt.Printf("%d commits in over %d day(s)", logicStruct.totalCount, logicStruct.bars.Length())
+	fmt.Printf(getCommaSeparatedString(logicStruct.totalCount) + " commits in over %d day(s)", logicStruct.bars.Length())
+	fmt.Println()
 	fmt.Println()
 	getScore(logicStruct)
 }
