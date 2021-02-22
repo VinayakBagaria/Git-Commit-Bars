@@ -22,10 +22,10 @@ type Logic struct {
 }
 
 var block = "\u2580"
-var count = 10
+var count = 4
 
-func normalize(x, xMin, xMax int) int {
-	return int(float32(x-xMin) / float32(xMax-xMin))
+func normalize(x, xMin, xMax int) float32 {
+	return float32(x-xMin) / float32(xMax-xMin)
 }
 
 func getScore(items Logic) {
@@ -33,7 +33,7 @@ func getScore(items Logic) {
 		switch val := value.(type) {
 		case Bars:
 			{
-				value := normalize(val.Commits, items.min, items.max)
+				value := int(normalize(val.Commits, items.min, items.max) * float32(count))
 				fmt.Print(val.Timestamp)
 				n := 0
 				fmt.Print(" ")
