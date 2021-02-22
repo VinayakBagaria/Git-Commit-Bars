@@ -10,7 +10,6 @@ import (
 )
 
 type Bars struct {
-	Timestamp string
 	Commits   int
 }
 
