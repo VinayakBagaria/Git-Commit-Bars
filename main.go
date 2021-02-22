@@ -17,6 +17,7 @@ type Bars struct {
 
 type Logic struct {
 	bars *collections.OrderedDict
+	totalCount int
 }
 
 var block = "\u2580"
@@ -101,6 +102,7 @@ func getCommitLog(after, before string, author string) (Logic, error) {
 	if len(res) == 0 {
 		return logicStruct, nil
 	}
+	totalCount := 0
 	for _, val := range res {
 		splitted := strings.Split(val, "|")
 		authorName := splitted[1]
@@ -119,8 +121,9 @@ func getCommitLog(after, before string, author string) (Logic, error) {
 			commitsForTs = 1
 		}
 		bars.Set(c, Bars{Timestamp: c, Commits: commitsForTs, Author: authorName})
+		totalCount += 1
 	}
-	logicStruct = Logic{bars: bars}
+	logicStruct = Logic{bars: bars, totalCount: totalCount}
 	return logicStruct, nil
 }
 
@@ -135,9 +138,11 @@ func main() {
 		fmt.Println("Error: Do you have Git initialized in this directory?")
 		os.Exit(0)
 	}
-	if logicStruct.bars.Length() == 0 {
+	if logicStruct.totalCount == 0 {
 		fmt.Println("No commits to plot")
 		os.Exit(0)
 	}
+	fmt.Printf("%d commits in over %d day(s)", logicStruct.totalCount, logicStruct.bars.Length())
+	fmt.Println()
 	getScore(logicStruct)
 }
