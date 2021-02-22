@@ -12,7 +12,7 @@ import (
 type Bars struct {
 	Timestamp string
 	Commits   int
-	Author string
+	Author    string
 }
 
 type Logic struct {
